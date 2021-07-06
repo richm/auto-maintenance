@@ -404,11 +404,20 @@ if __name__ == "__main__":
         subitem["type"] = item.plugintype
         subitem["collection"] = item.collection
         subitem["roles"].add(item.role)
-    print("These plugins are used at runtime: ")
-    for key in sorted(runtime_plugins):
-        item = runtime_plugins[key]
-        print(f"{item['collection']}.{item['name']} type: {item['type']} roles: {' '.join(sorted(item['roles']))}")
-    print("\nThese plugins are used in testing: ")
-    for key in sorted(testing_plugins):
-        item = testing_plugins[key]
-        print(f"{item['collection']}.{item['name']} type: {item['type']} roles: {' '.join(sorted(item['roles']))}")
+    for hsh in [runtime_plugins, testing_plugins]:
+        if hsh == runtime_plugins:
+            desc = "at runtime"
+        else:
+            desc = "in testing"
+        for plugintype in ["module", "filter", "test", "lookup"]:
+            for collection in ["ansible.builtin", "jinja2"]:
+                thelist = [xx['name'] for xx in hsh.values() if xx['collection'].startswith(collection) and xx['type'] == plugintype]
+                if thelist:
+                    print(f"The following {collection} {plugintype}s are used {desc}:")
+                    print(f"{' '.join(sorted(thelist))}")
+        print(f"\nThe following additional plugins are used {desc}:")
+        for key in sorted(hsh):
+            if key.startswith("ansible.builtin") or key.startswith("jinja2"):
+                continue
+            item = hsh[key]
+            print(f"{item['collection']}.{item['name']} type: {item['type']} roles: {' '.join(sorted(item['roles']))}")
